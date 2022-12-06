@@ -1,24 +1,30 @@
 const express = require('express')
+const cors = require('cors')
 const app = express()
+app.use(cors())
 const xml2js = require('xml2js')
 const axios = require('axios')
+
 
 app.get('/', async (req, res) => {
     try {
         const response = await axios.get("https://assignments.reaktor.com/birdnest/drones")
-        console.log("vastaus", response.data)
         xml2js.parseString(response.data, (err, result) => {
             if (err) {
                 throw err
             }
-            console.log("result", result)    
             const json = JSON.stringify(result)
-            console.log(json)
+            res.send(json)
         })   
     }
     catch (error) {
         console.log(error)
     }
+})
+
+app.get('/rulebreaker/:drone', (request, response) => {
+    const drone = request.params.droneSerialNumber
+    //https://assignments.reaktor.com/birdnest/pilots/SN-3OuE1-2lqV
 })
 
 
