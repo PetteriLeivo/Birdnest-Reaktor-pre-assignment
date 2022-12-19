@@ -1,9 +1,13 @@
+require('dotenv').config()
 const express = require('express')
+const PersonAndDistance = require('./models/PersonAndDistance')
 const cors = require('cors')
 const app = express()
 app.use(cors())
 const xml2js = require('xml2js')
 const axios = require('axios')
+
+
 
 
 app.get('/', async (req, res) => {
@@ -15,18 +19,31 @@ app.get('/', async (req, res) => {
             }
             const json = JSON.stringify(result)
             res.send(json)
-        })   
+        })
     }
     catch (error) {
         console.log(error)
     }
 })
 
-app.get('/rulebreaker/:drone', (request, response) => {
-    const drone = request.params.droneSerialNumber
-    //https://assignments.reaktor.com/birdnest/pilots/SN-3OuE1-2lqV
+app.get(`/latestrulebreaker/`, async (req, res) => {
+    const url = `https://assignments.reaktor.com/birdnest/pilots/${req.query.serialNumber}`
+    try {
+        const response = await axios.get(url)
+        //console.log(response)
+        res.send(response.data)
+    }
+    catch (error) {
+        console.log(error)
+    }
+})
+
+app.put('/latestrulebreakers/', async (req, res) => {
+    
+
 })
 
 
-const PORT = 3001
-app.listen(PORT)
+const PORT = process.env.PORT
+app.listen(PORT, () => { console.log(`Server running on port ${PORT}`) 
+})
