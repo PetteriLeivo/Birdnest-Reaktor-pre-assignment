@@ -6,6 +6,8 @@ const app = express()
 app.use(cors())
 const xml2js = require('xml2js')
 const axios = require('axios')
+const bodyParser = require('body-parser')
+app.use(bodyParser.json())
 
 
 
@@ -30,7 +32,6 @@ app.get(`/latestrulebreaker/`, async (req, res) => {
     const url = `https://assignments.reaktor.com/birdnest/pilots/${req.query.serialNumber}`
     try {
         const response = await axios.get(url)
-        //console.log(response)
         res.send(response.data)
     }
     catch (error) {
@@ -38,12 +39,49 @@ app.get(`/latestrulebreaker/`, async (req, res) => {
     }
 })
 
-app.put('/latestrulebreakers/', async (req, res) => {
-    
+
+
+app.put('/latestrulebreakers/', (req, res) => {
+    res.send('Got a PUT request at /latestrulebreakers')
+    req.body.forEach(element => {
+        const findBySerialNumber = element.serialNumber
+        const personAndDistance = new PersonAndDistance({
+            droneSerialNumber: element.serialNumber,
+            firstName: element.firstName,
+            lastName: element.lastName,
+            distance: element.distance
+        })
+        PersonAndDistance.findOne({ droneSerialNumber: findBySerialNumber }).then(foundPerson => {
+            if (foundPerson == null) {
+                    personAndDistance.save().then(savedpersonAndDistance => {
+                    console.log("saved new Person")
+                })
+            }
+                if (foundPerson != null) {
+                    if (foundPerson.distance > element.distance) {
+                        console.log("Lesser distance found")
+                        console.log("Old value", foundPerson.distance)
+                        console.log("New value", element.distance)
+                        foundPerson.distance = element.distance
+                        foundPerson.save().then(foundPerson => {
+                            console.log(foundPerson, "saved")
+                        }).catch((error) => {
+                            console.log("Save operation failed", error)
+                        })
+                    }
+                }
+            
+        }).catch(error => {
+            console.log(error)
+        })
+
+
+    });
 
 })
 
 
 const PORT = process.env.PORT
-app.listen(PORT, () => { console.log(`Server running on port ${PORT}`) 
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
 })

@@ -11,25 +11,22 @@ mongoose.connect(url).
         console.log("error connecting to MongoDB: ", error.message)
     })
 
-    const rulebreakerSchema = new mongoose.Schema({
+    const personAndDistanceSchema = new mongoose.Schema({
+        droneSerialNumber: String,
         firstName: String,
         lastName: String,
         distance: Number,
     
     })
 
-    const PersonAndDistance = mongoose.model('PersonAndDistance', rulebreakerSchema)
+    personAndDistanceSchema.set('toJSON', {
+        transform: (document, returnedObject) => {
+          returnedObject.id = returnedObject._id.toString()
+          delete returnedObject._id
+          delete returnedObject.__v
+        }
+      })
 
-    const personAndDistance = new PersonAndDistance({
-        firstName: "Jukka",
-        lastName: "testi",
-        distance: "11.5"
-
-    })
-
-    personAndDistance.save().then(result => {
-        console.log('saved')
-        mongoose.connection.close()
-    })
+    module.exports = mongoose.model('PersonAndDistance', personAndDistanceSchema)
 
 

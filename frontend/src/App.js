@@ -16,40 +16,16 @@ const SerialNumberWithCoordinates = ({ serialWithCoordinates }) => {
 
 }
 
-const RuleBreakers = ({ serialWithCoordinates, userInfoAndDistanceRef }) => {
+const calculateDistance = (x, y) => {
+  let xOrigin = 250000
+  let yOrigin = 250000
+  let distanceX = xOrigin - x
+  let distanceY = yOrigin - y
 
-  if (serialWithCoordinates.length > 0) {
+  return Math.floor(Math.sqrt(distanceX * distanceX + distanceY * distanceY)) / 1000
 
-    serialWithCoordinates.forEach(element => {
-      if (checkIfAboveNest(element.coordinateX / 1000, element.coordinateY / 1000)) {
-        axios.get('http://localhost:3001/latestrulebreaker/', {
-          params: { serialNumber: element.serialNumber }
-        }).then((response) => {
-          let x = 250000 - element.coordinateX
-          let y = 250000 - element.coordinateY
-          let distance = Math.floor(Math.sqrt(x * x + y * y)) / 1000
-          userInfoAndDistanceRef.current.push({ id: element.serialNumber, firstName: response.data.firstName, lastName: response.data.lastName, distance: distance })
-        }).catch((error) => {
-          console.log(error)
-        })
-      }
-
-
-
-    })
-      const userInfoAndDistance = userInfoAndDistanceRef.current.map(userInfoAndDistance => <div key={v4()}>{userInfoAndDistance.firstName} {userInfoAndDistance.lastName} {userInfoAndDistance.distance}</div>)
-      return (
-        <div>{userInfoAndDistance}</div>
-      )
-    
-
-  }
 
 }
-
-
-
-
 
 const checkIfAboveNest = (x, y) => {
   if (Math.pow((x - 250), 2) + Math.pow((y - 250), 2) <= Math.pow(100, 2)) {
@@ -59,10 +35,25 @@ const checkIfAboveNest = (x, y) => {
 
 }
 
+const Rulebreakers = ({ rulebreakers }) => {
+  if (rulebreakers.length > 0) {
+    const ruleBreakersElement = rulebreakers.map(x => <div key={v4()}> {x.firstName} {x.lastName} {x.distance}</div>)
+    return <div>{ruleBreakersElement}</div>
+  }
+  return <div></div>
+
+}
+
+
+
+
+
 
 const App = () => {
   const [serialWithCoordinates, setSerialWithCoordinates] = useState([]);
-  const userInfoAndDistanceRef = useRef(null)
+  const userInfoAndDistanceRef = useRef([])
+  const [rulebreakers, setrulebreakers] = useState([]);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,6 +77,39 @@ const App = () => {
     return () => clearInterval(interval)
   }, [])
 
+
+  useEffect(() => {
+      console.log("effect")
+      console.log(userInfoAndDistanceRef.current)
+      serialWithCoordinates.forEach(element => {
+        if (checkIfAboveNest(element.coordinateX / 1000, element.coordinateY / 1000)) {
+          axios.get('http://localhost:3001/latestrulebreaker/', {
+            params: { serialNumber: element.serialNumber }
+          }).then((response) => {
+            let distance = calculateDistance(element.coordinateX, element.coordinateY)
+            userInfoAndDistanceRef.current.push({ serialNumber: element.serialNumber.toString(), firstName: response.data.firstName, lastName: response.data.lastName, distance: distance })
+          }).catch((error) => {
+            console.log(error)
+          })
+        }
+      })
+    setrulebreakers(userInfoAndDistanceRef.current)
+    userInfoAndDistanceRef.current = []
+  }, [serialWithCoordinates])
+
+  useEffect(() => {
+    if (rulebreakers.length > 0) {
+          axios.put('http://localhost:3001/latestrulebreakers/', rulebreakers)
+        .then((putResponse) => {
+          console.log(putResponse)
+        }).catch((putError) => {
+          console.log(putError)
+        })
+      }
+    
+
+  }, [rulebreakers])
+
   const draw = ctx => {
     ctx.arc(1.5 * 250, 1.5 * 250, 1.5 * 100, 0, 2 * Math.PI)
     const birdImage = new Image();
@@ -106,18 +130,15 @@ const App = () => {
       })
     }
     ctx.stroke()
-    userInfoAndDistanceRef.current = []
   }
-
 
 
 
   return (
     <div style={{ textAlign: "center" }}>
       <h1>Birdnest</h1>
-      <RuleBreakers serialWithCoordinates={serialWithCoordinates} userInfoAndDistanceRef={userInfoAndDistanceRef} />
       <Canvas width="750px" height="750px" draw={draw} />
-
+      <Rulebreakers rulebreakers={rulebreakers} />
     </div>
   )
 }
