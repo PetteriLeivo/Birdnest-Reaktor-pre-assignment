@@ -16,6 +16,12 @@ const SerialNumberWithCoordinates = ({ serialWithCoordinates }) => {
 
 }
 
+const RuleBreakersFromLast10Minutes = ({ ruleBreakersFromLast10Minutes }) => {
+
+  const ruleBreakersFromLast10MinutesElement = ruleBreakersFromLast10Minutes.map(x => <tr key={v4()}> <td> Name: {x.firstName} {x.lastName} </td> <td> Phone: {x.phoneNumber} </td> <td> Email: {x.email} </td> <td> Closest distance to nest: {x.distance}</td> <td>meter </td></tr>)
+  return <table>{ruleBreakersFromLast10MinutesElement}</table>
+}
+
 const calculateDistance = (x, y) => {
   let xOrigin = 250000
   let yOrigin = 250000
@@ -35,24 +41,14 @@ const checkIfAboveNest = (x, y) => {
 
 }
 
-const Rulebreakers = ({ rulebreakers }) => {
-  if (rulebreakers.length > 0) {
-    const ruleBreakersElement = rulebreakers.map(x => <div key={v4()}> {x.firstName} {x.lastName} {x.distance}</div>)
-    return <div>{ruleBreakersElement}</div>
-  }
-  return <div></div>
-
-}
-
-
-
-
-
-
 const App = () => {
   const [serialWithCoordinates, setSerialWithCoordinates] = useState([]);
   const userInfoAndDistanceRef = useRef([])
   const [rulebreakers, setrulebreakers] = useState([]);
+  const [ruleBreakersPutResponse, setRuleBreakersPutResponse] = useState([]);
+  const [ruleBreakersFromLast10Minutes, setRuleBreakersFromLast10Minutes] = useState([]);
+
+
 
 
   useEffect(() => {
@@ -79,47 +75,55 @@ const App = () => {
 
 
   useEffect(() => {
-      console.log("effect")
-      console.log(userInfoAndDistanceRef.current)
-      serialWithCoordinates.forEach(element => {
-        if (checkIfAboveNest(element.coordinateX / 1000, element.coordinateY / 1000)) {
-          axios.get('http://localhost:3001/latestrulebreaker/', {
-            params: { serialNumber: element.serialNumber }
-          }).then((response) => {
-            let distance = calculateDistance(element.coordinateX, element.coordinateY)
-            userInfoAndDistanceRef.current.push({ serialNumber: element.serialNumber.toString(), firstName: response.data.firstName, lastName: response.data.lastName, distance: distance })
-          }).catch((error) => {
-            console.log(error)
-          })
-        }
-      })
+    console.log(userInfoAndDistanceRef.current)
+    serialWithCoordinates.forEach(element => {
+      if (checkIfAboveNest(element.coordinateX / 1000, element.coordinateY / 1000)) {
+        axios.get('http://localhost:3001/latestrulebreaker/', {
+          params: { serialNumber: element.serialNumber }
+        }).then((response) => {
+          let distance = calculateDistance(element.coordinateX, element.coordinateY)
+          userInfoAndDistanceRef.current.push({ serialNumber: element.serialNumber.toString(), firstName: response.data.firstName, lastName: response.data.lastName, phoneNumber: response.data.phoneNumber, email: response.data.email, distance: distance })
+        }).catch((error) => {
+          console.log(error)
+        })
+      }
+    })
     setrulebreakers(userInfoAndDistanceRef.current)
     userInfoAndDistanceRef.current = []
   }, [serialWithCoordinates])
 
   useEffect(() => {
     if (rulebreakers.length > 0) {
-          axios.put('http://localhost:3001/latestrulebreakers/', rulebreakers)
+      axios.put('http://localhost:3001/latestrulebreakers/', rulebreakers)
         .then((putResponse) => {
-          console.log(putResponse)
+          console.log("put", putResponse)
+          setRuleBreakersPutResponse(putResponse)
         }).catch((putError) => {
-          console.log(putError)
+          console.log("puterror", putError)
         })
-      }
-    
-
+    }
   }, [rulebreakers])
 
-  const draw = ctx => {
-    ctx.arc(1.5 * 250, 1.5 * 250, 1.5 * 100, 0, 2 * Math.PI)
-    const birdImage = new Image();
-    birdImage.src = birdicon
-    birdImage.onload = () => {
-      ctx.drawImage(birdImage, 1.5 * 230, 1.5 * 230, 1.5 * 40, 1.5 * 40)
-    }
+  useEffect(() => {
+    axios.get('http://localhost:3001/latestrulebreakerlist/')
+      .then((getResponse) => {
+        console.log("lista", getResponse)
+        console.log("avaimet", Object.keys(getResponse.data))
+        setRuleBreakersFromLast10Minutes(getResponse.data)
+
+      }).catch((getError) => {
+        console.log("geterror", getError)
+      })
+
+
+
+  }, [ruleBreakersPutResponse])
+
+
+
+  const drawDrones = ctx => {
 
     if (serialWithCoordinates.length > 0) {
-      ctx.clearRect(0, 0, 750, 750)
 
       serialWithCoordinates.forEach(element => {
         const image = new Image();
@@ -129,16 +133,31 @@ const App = () => {
         }
       })
     }
-    ctx.stroke()
+    // ctx.stroke()
+    ctx.clearRect(0, 0, 750, 750)
+  }
+
+  const drawBirdAndZone = ctx => {
+    const birdImage = new Image();
+    birdImage.src = birdicon
+    birdImage.onload = () => {
+      ctx.arc(1.5 * 250, 1.5 * 250, 1.5 * 100, 0, 2 * Math.PI)
+      ctx.stroke()
+      ctx.drawImage(birdImage, 1.5 * 230, 1.5 * 230, 1.5 * 40, 1.5 * 40)
+    }
   }
 
 
+  //<div style={{ textAlign: "center" }}></div>
 
   return (
-    <div style={{ textAlign: "center" }}>
+    <div>
       <h1>Birdnest</h1>
-      <Canvas width="750px" height="750px" draw={draw} />
-      <Rulebreakers rulebreakers={rulebreakers} />
+      <h2>Users that violated violated the NDZ perimeter</h2>
+      <div style={{ display: "flex" }}> <RuleBreakersFromLast10Minutes ruleBreakersFromLast10Minutes={ruleBreakersFromLast10Minutes} />
+        <Canvas style={{zIndex:0, position: "absolute", top: 100, left: 900}} width="750px" height="750px" draw={drawDrones} />
+        <Canvas style={{zIndex:1, position: "absolute", top: 100, left: 900}} width="750px" height="750px" draw={drawBirdAndZone} />
+      </div>
     </div>
   )
 }

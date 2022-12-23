@@ -7,6 +7,7 @@ app.use(cors())
 const xml2js = require('xml2js')
 const axios = require('axios')
 const bodyParser = require('body-parser')
+const { response } = require('express')
 app.use(bodyParser.json())
 
 
@@ -39,38 +40,49 @@ app.get(`/latestrulebreaker/`, async (req, res) => {
     }
 })
 
-
+app.get(`/latestrulebreakerlist/`, async (req, res) => {
+    PersonAndDistance.find({}).then(personAndDistances => {
+        console.log("lista", personAndDistances)
+        res.send(personAndDistances)
+    }).catch(error => {
+        console.log(error)
+    })
+})
 
 app.put('/latestrulebreakers/', (req, res) => {
     res.send('Got a PUT request at /latestrulebreakers')
     req.body.forEach(element => {
         const findBySerialNumber = element.serialNumber
         const personAndDistance = new PersonAndDistance({
+            createdOn : new Date(),
             droneSerialNumber: element.serialNumber,
             firstName: element.firstName,
             lastName: element.lastName,
+            phoneNumber: element.phoneNumber,
+            email: element.email,
             distance: element.distance
         })
         PersonAndDistance.findOne({ droneSerialNumber: findBySerialNumber }).then(foundPerson => {
             if (foundPerson == null) {
-                    personAndDistance.save().then(savedpersonAndDistance => {
+                personAndDistance.save().then(savedpersonAndDistance => {
                     console.log("saved new Person")
                 })
             }
-                if (foundPerson != null) {
-                    if (foundPerson.distance > element.distance) {
-                        console.log("Lesser distance found")
-                        console.log("Old value", foundPerson.distance)
-                        console.log("New value", element.distance)
-                        foundPerson.distance = element.distance
-                        foundPerson.save().then(foundPerson => {
-                            console.log(foundPerson, "saved")
-                        }).catch((error) => {
-                            console.log("Save operation failed", error)
-                        })
-                    }
+            if (foundPerson != null) {
+                foundPerson.createdOn = new Date()
+                if (foundPerson.distance > element.distance) {
+                    console.log("Lesser distance found")
+                    console.log("Old value", foundPerson.distance)
+                    console.log("New value", element.distance)
+                    foundPerson.distance = element.distance
+                    foundPerson.save().then(foundPerson => {
+                        console.log(foundPerson, "saved")
+                    }).catch((error) => {
+                        console.log("Save operation failed", error)
+                    })
                 }
-            
+            }
+
         }).catch(error => {
             console.log(error)
         })
