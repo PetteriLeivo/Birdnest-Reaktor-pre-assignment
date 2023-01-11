@@ -6,16 +6,6 @@ import droneicon from './icons/drone.png'
 import birdicon from './icons/bird.png'
 
 
-
-const SerialNumberWithCoordinates = ({ serialWithCoordinates }) => {
-  if (serialWithCoordinates.length > 0) {
-    const serialNumberWithCoordinatesElement = serialWithCoordinates.map(x => <div key={v4()}> {x.serialNumber} {x.coordinateX / 1000} {x.coordinateY / 1000}</div>)
-    return <div>{serialNumberWithCoordinatesElement}</div>
-  }
-  return <div>Ladataan</div>
-
-}
-
 const RuleBreakersFromLast10Minutes = ({ ruleBreakersFromLast10Minutes }) => {
 
   const ruleBreakersFromLast10MinutesElement = ruleBreakersFromLast10Minutes.map(x => <tr key={v4()}> <td> Name: {x.firstName} {x.lastName} </td> <td> Phone: {x.phoneNumber} </td> <td> Email: {x.email} </td> <td> Closest distance to nest: {x.distance}</td> <td>meter </td></tr>)
@@ -43,7 +33,7 @@ const checkIfAboveNest = (x, y) => {
 
 const App = () => {
   const [serialWithCoordinates, setSerialWithCoordinates] = useState([]);
-  const userInfoAndDistanceRef = useRef([])
+  const userInfoAndDistanceRef = useRef([]);
   const [rulebreakers, setrulebreakers] = useState([]);
   const [ruleBreakersPutResponse, setRuleBreakersPutResponse] = useState([]);
   const [ruleBreakersFromLast10Minutes, setRuleBreakersFromLast10Minutes] = useState([]);
@@ -96,10 +86,8 @@ const App = () => {
     if (rulebreakers.length > 0) {
       axios.put('http://localhost:3001/latestrulebreakers/', rulebreakers)
         .then((putResponse) => {
-          console.log("put", putResponse)
           setRuleBreakersPutResponse(putResponse)
         }).catch((putError) => {
-          console.log("puterror", putError)
         })
     }
   }, [rulebreakers])
@@ -107,16 +95,10 @@ const App = () => {
   useEffect(() => {
     axios.get('http://localhost:3001/latestrulebreakerlist/')
       .then((getResponse) => {
-        console.log("lista", getResponse)
-        console.log("avaimet", Object.keys(getResponse.data))
         setRuleBreakersFromLast10Minutes(getResponse.data)
 
       }).catch((getError) => {
-        console.log("geterror", getError)
       })
-
-
-
   }, [ruleBreakersPutResponse])
 
 
@@ -133,7 +115,6 @@ const App = () => {
         }
       })
     }
-    // ctx.stroke()
     ctx.clearRect(0, 0, 750, 750)
   }
 
@@ -148,12 +129,11 @@ const App = () => {
   }
 
 
-  //<div style={{ textAlign: "center" }}></div>
 
   return (
     <div>
       <h1>Birdnest</h1>
-      <h2>Users that violated violated the NDZ perimeter</h2>
+      <h2>Users that violated violated the NDZ perimeter from the last 10 minutes</h2>
       <div style={{ display: "flex" }}> <RuleBreakersFromLast10Minutes ruleBreakersFromLast10Minutes={ruleBreakersFromLast10Minutes} />
         <Canvas style={{zIndex:0, position: "absolute", top: 100, left: 900}} width="750px" height="750px" draw={drawDrones} />
         <Canvas style={{zIndex:1, position: "absolute", top: 100, left: 900}} width="750px" height="750px" draw={drawBirdAndZone} />
