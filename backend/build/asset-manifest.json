@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.js": "/static/js/main.fed82ce8.js",
+    "static/media/bird.png": "/static/media/bird.de144350600592d08cdf.png",
+    "static/media/drone.png": "/static/media/drone.0f352f3eb2de63a5031b.png",
+    "index.html": "/index.html",
+    "main.fed82ce8.js.map": "/static/js/main.fed82ce8.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.fed82ce8.js"
+  ]
+}

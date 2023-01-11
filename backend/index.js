@@ -1,8 +1,9 @@
 require('dotenv').config()
 const express = require('express')
+const app = express()
+app.use(express.static('build'))
 const PersonAndDistance = require('./models/PersonAndDistance')
 const cors = require('cors')
-const app = express()
 app.use(cors())
 const xml2js = require('xml2js')
 const axios = require('axios')
@@ -12,7 +13,7 @@ app.use(bodyParser.json())
 
 
 
-app.get('/', async (req, res, next) => {
+app.get('/api/', async (req, res, next) => {
     try {
         const response = await axios.get("https://assignments.reaktor.com/birdnest/drones")
         xml2js.parseString(response.data, (err, result) => {
@@ -28,7 +29,7 @@ app.get('/', async (req, res, next) => {
     }
 })
 
-app.get(`/latestrulebreaker/`, async (req, res, next) => {
+app.get(`/api/latestrulebreaker/`, async (req, res, next) => {
     const url = `https://assignments.reaktor.com/birdnest/pilots/${req.query.serialNumber}`
     try {
         const response = await axios.get(url)
@@ -39,7 +40,7 @@ app.get(`/latestrulebreaker/`, async (req, res, next) => {
     }
 })
 
-app.get(`/latestrulebreakerlist/`, async (req, res, next) => {
+app.get(`/api/latestrulebreakerlist/`, async (req, res, next) => {
     PersonAndDistance.find({}).then(personAndDistances => {
         res.send(personAndDistances)
     }).catch(error => {
@@ -47,7 +48,7 @@ app.get(`/latestrulebreakerlist/`, async (req, res, next) => {
     })
 })
 
-app.put('/latestrulebreakers/', (req, res, next) => {
+app.put('/api/latestrulebreakers/', (req, res, next) => {
     if (req.body != null) {
         req.body.forEach(element => {
             const findBySerialNumber = element.serialNumber

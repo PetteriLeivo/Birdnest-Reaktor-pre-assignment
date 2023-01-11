@@ -44,7 +44,7 @@ const App = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const dronesData = await axios.get("http://localhost:3001")
+        const dronesData = await axios.get('/api')
         const droneCapture = dronesData.data.report.capture.map(x => x.drone)
         const droneInfo = droneCapture[0].map(x => {
           const serialNumberandCoordinateObject = { serialNumber: x.serialNumber, coordinateX: x.positionX, coordinateY: x.positionY }
@@ -68,7 +68,7 @@ const App = () => {
     console.log(userInfoAndDistanceRef.current)
     serialWithCoordinates.forEach(element => {
       if (checkIfAboveNest(element.coordinateX / 1000, element.coordinateY / 1000)) {
-        axios.get('http://localhost:3001/latestrulebreaker/', {
+        axios.get('/api/latestrulebreaker', {
           params: { serialNumber: element.serialNumber }
         }).then((response) => {
           let distance = calculateDistance(element.coordinateX, element.coordinateY)
@@ -84,7 +84,7 @@ const App = () => {
 
   useEffect(() => {
     if (rulebreakers.length > 0) {
-      axios.put('http://localhost:3001/latestrulebreakers/', rulebreakers)
+      axios.put('/api/latestrulebreakers', rulebreakers)
         .then((putResponse) => {
           setRuleBreakersPutResponse(putResponse)
         }).catch((putError) => {
@@ -93,7 +93,7 @@ const App = () => {
   }, [rulebreakers])
 
   useEffect(() => {
-    axios.get('http://localhost:3001/latestrulebreakerlist/')
+    axios.get('/api/latestrulebreakerlist')
       .then((getResponse) => {
         setRuleBreakersFromLast10Minutes(getResponse.data)
 
