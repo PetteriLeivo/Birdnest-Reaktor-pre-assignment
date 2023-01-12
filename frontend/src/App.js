@@ -8,7 +8,13 @@ import birdicon from './icons/bird.png'
 
 const RuleBreakersFromLast10Minutes = ({ ruleBreakersFromLast10Minutes }) => {
 
-  const ruleBreakersFromLast10MinutesElement = ruleBreakersFromLast10Minutes.map(x => <tr key={v4()}> <td> Name: {x.firstName} {x.lastName} </td> <td> Phone: {x.phoneNumber} </td> <td> Email: {x.email} </td> <td> Closest distance to nest: {x.distance}</td> <td>meter </td></tr>)
+  const ruleBreakersFromLast10MinutesElement = ruleBreakersFromLast10Minutes.map(x => 
+  <tr key={v4()}> 
+  <td> <strong> Name: </strong> {x.firstName} {x.lastName} </td> 
+  <td><strong>Phone: </strong> {x.phoneNumber} </td> 
+  <td> <strong> Email: </strong> {x.email} </td> 
+  <td> <strong>Closest distance to nest: </strong>{x.distance}</td> <td> <strong>meter.</strong> </td>
+  </tr>)
   return <table>{ruleBreakersFromLast10MinutesElement}</table>
 }
 
@@ -65,7 +71,6 @@ const App = () => {
 
 
   useEffect(() => {
-    console.log(userInfoAndDistanceRef.current)
     serialWithCoordinates.forEach(element => {
       if (checkIfAboveNest(element.coordinateX / 1000, element.coordinateY / 1000)) {
         axios.get('/api/latestrulebreaker', {
@@ -88,6 +93,7 @@ const App = () => {
         .then((putResponse) => {
           setRuleBreakersPutResponse(putResponse)
         }).catch((putError) => {
+          console.log(putError)
         })
     }
   }, [rulebreakers])
@@ -98,6 +104,7 @@ const App = () => {
         setRuleBreakersFromLast10Minutes(getResponse.data)
 
       }).catch((getError) => {
+        console.log(getError)
       })
   }, [ruleBreakersPutResponse])
 
